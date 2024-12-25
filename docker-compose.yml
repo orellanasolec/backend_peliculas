@@ -1,0 +1,44 @@
+
+services:
+  # Servicio para la base de datos MySQL
+  mysql:
+    image:  mysql:8.0
+    container_name: mysql-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "3311:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+
+  # Servicio para la aplicación Node.js
+  app:
+    image: node:16 # Usar la imagen oficial de Node.js
+    container_name: node-app
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    networks:
+      - backend
+    volumes:
+      - ./app:/usr/src/app # Montar tu código de aplicación en el contenedor
+    env_file:
+      - .env  # Cargar variables de entorno desde el archivo .env
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mysql-data:
