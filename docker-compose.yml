@@ -1,44 +1,49 @@
+# docker-compose.yml modificado para PostgreSQL
 
 services:
-  # Servicio para la base de datos MySQL
-  mysql:
-    image:  mysql:8.0
-    container_name: mysql-db
+  # ------------------------------------------------------------------
+  # SERVICIO DE BASE DE DATOS POSTGRESQL (reemplaza a mysql)
+  # ------------------------------------------------------------------
+  postgres-db:
+    image: postgres:15 # Usamos una imagen oficial de PostgreSQL. La versión 15 es estable.
+    container_name: postgres-db-local
+    restart: always # Opcional: reinicia el contenedor si se cae.
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      # Las variables de entorno para Postgres son diferentes.
+      POSTGRES_USER: ${DB_USER}       # Lee el usuario del archivo .env
+      POSTGRES_PASSWORD: ${DB_PASSWORD} # Lee la contraseña del archivo .env
+      POSTGRES_DB: ${DB_DATABASE}     # Lee el nombre de la DB del archivo .env
     ports:
-      - "3311:3306"
+      - "5432:5432" # El puerto estándar de Postgres es 5432. Lo mapeamos a tu PC.
     volumes:
-      - mysql-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data # Ruta donde Postgres guarda sus datos.
     networks:
       - backend
 
-  # Servicio para la aplicación Node.js
+  # ------------------------------------------------------------------
+  # SERVICIO PARA TU APLICACIÓN NODE.JS
+  # ------------------------------------------------------------------
   app:
-    image: node:16 # Usar la imagen oficial de Node.js
-    container_name: node-app
+    build: .
+    container_name: node-app-local
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
+      # Ya no necesitamos pasar las variables de DB por separado porque el código
+      # de NestJS ahora usa la variable DATABASE_URL del archivo .env
+      - NODE_ENV=development
+    depends_on:
+      - postgres-db # Ahora depende del servicio de postgres
     ports:
       - "3000:3000"
-    depends_on:
-      - mysql
+    env_file:
+      - .env # ¡Muy importante! Carga todas las variables de tu archivo .env
     networks:
       - backend
-    volumes:
-      - ./app:/usr/src/app # Montar tu código de aplicación en el contenedor
-    env_file:
-      - .env  # Cargar variables de entorno desde el archivo .env
 
+# Definición de la red (no cambia)
 networks:
   backend:
     driver: bridge
 
+# Definición de los volúmenes (cambiamos el nombre para que sea claro)
 volumes:
-  mysql-data:
+  postgres-data:

@@ -1,0 +1,45 @@
+# fly.toml - Archivo de configuración FINAL para mysql-db-fly
+
+# Nombre de la aplicación en Fly.io.
+app = "mysql-db-fly"
+
+# Región principal donde se desplegará.
+primary_region = "sjc" # Asegúrate de que esta sea la región correcta
+
+[build]
+  # Fly.io usará el 'Dockerfile' que creamos en esta carpeta para construir la imagen.
+  dockerfile = "Dockerfile"
+
+# Esta sección es VITAL. Conecta el disco duro persistente 'mysql_data'
+# al directorio donde MySQL guarda todos los datos.
+[mounts]
+  source = "mysql_data"
+  destination = "/var/lib/mysql"
+
+# Esta sección expone el puerto de la base de datos a la red interna de Fly.io
+# para que tu API pueda conectarse.
+[[services]]
+  protocol = "tcp"
+  internal_port = 3306
+  processes = ["app"]
+  
+  # Le decimos a Fly.io que nunca apague esta máquina automáticamente.
+  auto_stop_machines = false
+  # Nos aseguramos de que siempre haya al menos una máquina corriendo.
+  min_machines_running = 1
+
+  # --- ¡ESTA SECCIÓN [[services.ports]] HA SIDO ELIMINADA! ---
+  # No es necesaria para la conectividad interna y estaba causando un error con los 'handlers'.
+
+  # --- ¡ESTA ES LA SECCIÓN PARA LAS VERIFICACIONES DE SALUD! ---
+  # Esto es crucial para que Fly.io espere a que MySQL esté realmente listo
+  # antes de que tu API intente conectarse.
+  [[services.tcp_checks]]
+    interval = "10s"     # Fly.io chequeará el puerto cada 10 segundos
+    timeout = "2s"       # Esperará hasta 2 segundos por una respuesta
+    # Este 'grace_period' es muy importante: le da a MySQL 60 segundos
+    # para arrancar por completo y abrir el puerto 3306 antes de que Fly.io
+    # empiece a verificarlo.
+    grace_period = "60s" 
+    restart_limit = 0    # No reiniciar por fallas consecutivas del chequeo TCP
+    port = 3306          # Verificar el puerto 3306
