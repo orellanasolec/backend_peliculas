@@ -34,6 +34,7 @@ import { LoginModule } from './login/login.module';
              : false,
         autoLoadEntities: true, // Esto es más limpio que listar las entidades a mano
         synchronize: false,
+        logging: true,
       }),
     }),
 
