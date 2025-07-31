@@ -10,7 +10,8 @@ export default registerAs('jwt', () => {
   return {
     secret: process.env.JWT_SECRET,
     signOptions: {
-      expiresIn: '1h', // Puedes ajustar el tiempo de expiración
+      expiresIn: '5m', // Puedes ajustar el tiempo de expiración
     },
   };
 });
+
