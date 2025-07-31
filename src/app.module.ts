@@ -30,8 +30,8 @@ import { LoginModule } from './login/login.module';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         ssl: configService.get<string>('NODE_ENV') === 'production' 
-             ? { rejectUnauthorized: false } 
-             : false,
+              ? { rejectUnauthorized: false } 
+              : false,
         autoLoadEntities: true, // Esto es más limpio que listar las entidades a mano
         synchronize: false,
         logging: true,
@@ -43,7 +43,11 @@ import { LoginModule } from './login/login.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       // Ahora usamos la configuración que cargamos antes
-      useFactory: (configService: ConfigService) => configService.get('jwt'),
+      useFactory: (configService: ConfigService) => {
+        const jwtConfigObject = configService.get('jwt');console.log('Backend JWT Config Object cargado:', jwtConfigObject)
+        ; // <--- LÍNEA DE DEBUG AJUSTADA
+        return jwtConfigObject;
+      },
     }),
     // --- FIN DE LA SECCIÓN ---
 
