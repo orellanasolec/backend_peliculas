@@ -28,7 +28,7 @@ export class PeliculaController {
     return await this.peliculaService.findAll();
   }
 
-  @UseGuards(JwtGuard)
+ 
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res: Response) {
     console.log("alguien busco aca")
