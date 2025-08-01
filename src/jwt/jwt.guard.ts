@@ -6,40 +6,47 @@ import { ConfigService } from '@nestjs/config';
 export class JwtGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService // <--- ¡Importante! Inyectamos ConfigService
+    private readonly configService: ConfigService
   ) {}
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const bearerToken = request.headers.authorization;
 
+    // --- LÍNEAS DE DEBUG ADICIONALES ---
+    // Loguea el token completo para verificar si hay espacios extra o errores
+    console.log('Bearer Token recibido:', bearerToken);
+
     if (!bearerToken) {
-      // Usamos una excepción estándar de NestJS en lugar de devolver 'false'
-      // Esto proporciona un mensaje de error más claro al cliente.
       throw new UnauthorizedException('Token no proporcionado');
     }
 
-    // Dividimos el token en "Bearer" y el token real
     const [type, token] = bearerToken.split(' ');
+
+    // Loguea el tipo de token y el token extraído para su inspección
+    console.log('Tipo de token:', type);
+    console.log('Token extraído:', token);
 
     if (type !== 'Bearer' || !token) {
       throw new UnauthorizedException('Formato de token inválido. Se espera "Bearer <token>"');
     }
     
-    // Obtenemos el secreto usando el ConfigService, asegurándonos de que es el valor correcto.
     const jwtSecret = this.configService.get('jwt.secret');
-    console.log("aca esta el secreto "+jwtSecret)
-
+    console.log('Secreto JWT obtenido del ConfigService:', jwtSecret);
+    
     try {
       // Verificamos el token con el secreto obtenido del servicio de configuración.
       const valor = this.jwtService.verify(token, { secret: jwtSecret });
       request.datosUsuarios = valor;
       console.log('Token verificado con éxito:', valor);
     } catch (error) {
+      // --- LÍNEAS DE DEBUG CRÍTICAS ---
+      // Imprime el objeto de error completo para saber la causa exacta.
+      console.error('Error de verificación de token:', error);
+      
       if (error.name === 'TokenExpiredError') {
         throw new UnauthorizedException('El token ha expirado. Por favor, inicia sesión de nuevo.');
       }
-      // Para cualquier otro error de verificación del token
       throw new UnauthorizedException('Token inválido.');
     }
 
