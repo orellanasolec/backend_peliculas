@@ -28,6 +28,7 @@ export class JwtGuard implements CanActivate {
     
     // Obtenemos el secreto usando el ConfigService, asegurándonos de que es el valor correcto.
     const jwtSecret = this.configService.get('jwt.secret');
+    console.log("aca esta el secreto "+jwtSecret)
 
     try {
       // Verificamos el token con el secreto obtenido del servicio de configuración.
